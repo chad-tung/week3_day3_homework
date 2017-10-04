@@ -2,6 +2,7 @@ require 'pg'
 require_relative '../db/sql_runner.rb'
 
 class Album
+    attr_accessor :title, :genre
 
     def initialize(options)
         @id = options['id'].to_i if options['id']
@@ -18,11 +19,30 @@ class Album
         @id = result[0]["id"].to_i
     end
 
+    def self.find(id)
+        sql = "SELECT * FROM albums where id = $1"
+        values = [id]
+        result = SqlRunner.run(sql, "find_album_by_id", values)
+        return result.map { |album_hash| Album.new(album_hash) }
+    end
+
     def self.all()
         sql = "SELECT * FROM albums;"
         values = []
         result = SqlRunner.run(sql, "select_all_albums", values)
         return result.map { |album_hash| Album.new(album_hash) }
+    end
+
+    def update()
+        sql = "UPDATE albums SET (title, genre, artist_id) = ($1, $2, $3) WHERE id = $4"
+        values = [@title, @genre, @artist_id, @id]
+        result = SqlRunner(sql, "update_album", values)
+    end
+
+    def delete()
+        sql = "DELETE FROM albums WHERE id = $1;"
+        values = [@id]
+        result = SqlRunner(sql, "delete_album", values)
     end
 
     def self.delete_all()
